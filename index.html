@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>🂡 Sâm Lốc</title>
   <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/5/5c/Spades_suit.svg" type="image/svg+xml">
   <style>
@@ -14,6 +14,7 @@
       background: #000;
       color: #d1d5db;
       position: relative;
+      touch-action: manipulation; /* ✅ chặn zoom & double-tap */
     }
     h1 {
       text-align: center;
@@ -65,20 +66,15 @@
       display: flex;
       gap: 8px;
       align-items: center;
-      margin-top: 12px;
+      margin-top: 16px;
     }
     .muted {
       font-size: 13px;
       color: #6b7280;
       margin-top: 6px;
     }
-
-    #sendBtn {
-      background: #ef4444; /* đỏ */
-    }
-    #nextRowBtn {
-      background: #10b981; /* xanh */
-    }
+    #sendBtn { background: #ef4444; }  /* đỏ */
+    #nextRowBtn { background: #10b981; } /* xanh */
 
     /* --- Nút + và − --- */
     .plusminus {
@@ -109,11 +105,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 10;
     }
-    #fab:hover {
-      background: #4b5563;
-      transform: scale(1.05);
-    }
+    #fab:hover { background: #4b5563; transform: scale(1.05); }
 
     /* --- Bubble hiển thị điểm --- */
     #scoreBubble {
@@ -155,7 +149,7 @@
       <button id="plusBtn">+</button>
     </div>
 
-    <div class="row" style="margin-top:16px;">
+    <div class="row">
       <button id="sendBtn">Thua</button>
       <button id="nextRowBtn">Thắng</button>
     </div>
@@ -177,11 +171,11 @@
     const fab = document.getElementById('fab');
     const scoreBubble = document.getElementById('scoreBubble');
 
-    // Nhớ tên người chơi
+    // Nhớ tên
     if (localStorage.getItem('sheet_name')) nameInp.value = localStorage.getItem('sheet_name');
     nameInp.addEventListener('change', () => localStorage.setItem('sheet_name', nameInp.value.trim()));
 
-    // Hàm gửi dữ liệu (POST)
+    // Gửi dữ liệu (POST)
     function sendResult(value) {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
@@ -198,7 +192,7 @@
       .then(() => {
         setTimeout(() => {
           statusLbl.textContent = '✅ Đã gửi kết quả!';
-          valInp.value = ''; // Xóa ô nhập sau khi gửi
+          valInp.value = ''; // xoá trắng ô
           valInp.blur();
           roundInp.value = round + 1;
         }, 1500);
@@ -206,27 +200,29 @@
       .catch(() => statusLbl.textContent = '❌ Lỗi gửi dữ liệu');
     }
 
-    // Nút Thua
+    // Thua
     document.getElementById('sendBtn').addEventListener('click', () => {
       const val = valInp.value.trim();
       if (!val) { alert('⚠️ Nhập số lá trước khi gửi'); return; }
       sendResult(val);
     });
 
-    // Nút Thắng
+    // Thắng
     document.getElementById('nextRowBtn').addEventListener('click', () => {
-      sendResult(''); // Gửi trắng = xoá ô
+      sendResult(''); // gửi ô trống
     });
 
-    // Nút + / −
-    document.getElementById('plusBtn').addEventListener('click', () => {
+    // + / −
+    document.getElementById('plusBtn').addEventListener('click', e => {
+      e.preventDefault();
       valInp.value = (parseInt(valInp.value || 0) + 1);
     });
-    document.getElementById('minusBtn').addEventListener('click', () => {
+    document.getElementById('minusBtn').addEventListener('click', e => {
+      e.preventDefault();
       valInp.value = Math.max(0, parseInt(valInp.value || 0) - 1);
     });
 
-    // Floating xem điểm
+    // 💰 Xem điểm
     fab.addEventListener('click', fetchSum);
     function fetchSum() {
       const name = nameInp.value.trim();
@@ -240,13 +236,16 @@
         })
         .catch(() => showScore('⚠️ Lỗi tải điểm'));
     }
-
     function showScore(msg) {
       scoreBubble.textContent = msg;
       scoreBubble.style.display = 'block';
       clearTimeout(scoreBubble.hideTimeout);
       scoreBubble.hideTimeout = setTimeout(() => scoreBubble.style.display = 'none', 4000);
     }
+
+    /* ✅ Chặn zoom pinch & double-tap trên iOS */
+    document.addEventListener('gesturestart', e => e.preventDefault());
+    document.addEventListener('dblclick', e => e.preventDefault());
   </script>
 </body>
 </html>
