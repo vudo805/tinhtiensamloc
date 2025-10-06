@@ -36,42 +36,46 @@
   </div>
 
   <script>
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw_5a5SvWKh_V7ShnBSyA_NqgWz74PYiWNCFIOpZY9IiDNa3k0qmJa1G2fri5Is3NMi/exec";
+    // ✅ URL mới của Apps Script
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby8tTtswvA1Mt6X35UR6tSiLuxjO-EB31Hm1MEHVYWzrU6fZ5E2jaO2NUc0SebiUUFw/exec";
 
     const nameInp = document.getElementById('name');
     const roundInp = document.getElementById('round');
     const valInp = document.getElementById('value');
     const statusLbl = document.getElementById('status');
 
-    // nhớ tên
-    if(localStorage.getItem('sheet_name')){
+    // ✅ Lưu tên để lần sau tự nhớ
+    if (localStorage.getItem('sheet_name')) {
       nameInp.value = localStorage.getItem('sheet_name');
     }
-    nameInp.addEventListener('change', ()=>{
+    nameInp.addEventListener('change', () => {
       localStorage.setItem('sheet_name', nameInp.value.trim());
     });
 
-    document.getElementById('sendBtn').addEventListener('click', ()=>{
+    // ✅ Gửi dữ liệu
+    document.getElementById('sendBtn').addEventListener('click', () => {
       const name = nameInp.value.trim();
-      const round = parseInt(roundInp.value,10);
+      const round = parseInt(roundInp.value, 10);
       const val = valInp.value.trim();
-      if(!name || isNaN(round) || !val){
+      if (!name || isNaN(round) || !val) {
         alert('Vui lòng nhập đầy đủ tên, ván và nội dung');
         return;
       }
 
-      // tính dòng: ván + 2 vì hàng 1 = tên, hàng 2 = SUM
+      // hàng 1 = tiêu đề, hàng 2 = SUM → dữ liệu bắt đầu từ hàng 3
       const row = round + 2;
 
       statusLbl.textContent = '⏳ Đang gửi...';
+
+      // ⚙️ Dùng no-cors để tránh CORS
       fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // tránh preflight
         body: JSON.stringify({ name, row, value: val })
       })
-      .then(r => r.text())
-      .then(res => {
-        statusLbl.textContent = '✅ ' + res;
+      .then(() => {
+        statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
         valInp.value = '';
         valInp.focus();
       })
@@ -81,8 +85,9 @@
       });
     });
 
-    document.getElementById('nextRowBtn').addEventListener('click', ()=>{
-      const cur = parseInt(roundInp.value,10) || 0;
+    // ✅ Nút chuyển sang ván mới
+    document.getElementById('nextRowBtn').addEventListener('click', () => {
+      const cur = parseInt(roundInp.value, 10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
