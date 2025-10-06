@@ -14,23 +14,22 @@
       background: #000;
       color: #d1d5db;
       position: relative;
-      touch-action: manipulation; /* ✅ chặn zoom & double-tap */
     }
     h1 {
       text-align: center;
       font-size: 22px;
       margin-bottom: 20px;
-      color: #e5e7eb;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      color: #f3f4f6;
     }
     .card {
       background: #111827;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .6);
-      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .6);
+      padding: 20px;
     }
     label {
       display: block;
@@ -38,56 +37,61 @@
       font-weight: 600;
       color: #9ca3af;
     }
-    input, button {
-      border-radius: 8px;
-      border: 1px solid #374151;
-      font-size: 15px;
-      box-sizing: border-box;
-    }
     input {
       width: 100%;
       padding: 10px;
       margin-top: 4px;
+      border-radius: 8px;
+      font-size: 15px;
+      border: 1px solid #374151;
       background: #0f172a;
       color: #f1f5f9;
+      box-sizing: border-box;
     }
     input::placeholder { color: #6b7280; }
-    button {
-      padding: 10px;
-      background: #374151;
-      color: #f3f4f6;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background .2s ease;
-    }
-    button:hover { background: #4b5563; }
+
     .row {
       display: flex;
       gap: 8px;
       align-items: center;
-      margin-top: 16px;
+      margin-top: 6px;
     }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      color: #f9fafb;
+      transition: all .2s ease;
+    }
+
+    .small-btn {
+      background: #374151;
+      color: #f3f4f6;
+      flex: 1;
+    }
+    .small-btn:hover { background: #4b5563; }
+
+    .btn-red {
+      background: #dc2626;
+    }
+    .btn-red:hover { background: #ef4444; }
+
+    .btn-green {
+      background: #16a34a;
+    }
+    .btn-green:hover { background: #22c55e; }
+
     .muted {
       font-size: 13px;
       color: #6b7280;
-      margin-top: 6px;
-    }
-    #sendBtn { background: #ef4444; }  /* đỏ */
-    #nextRowBtn { background: #10b981; } /* xanh */
-
-    /* --- Nút + và − --- */
-    .plusminus {
-      display: flex;
-      justify-content: space-between;
       margin-top: 8px;
     }
-    .plusminus button {
-      width: 48%;
-      font-size: 18px;
-    }
 
-    /* --- Floating Button 💰 --- */
     #fab {
       position: fixed;
       bottom: 20px;
@@ -101,15 +105,13 @@
       font-size: 28px;
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      transition: all 0.3s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 10;
+      transition: all 0.3s ease;
     }
     #fab:hover { background: #4b5563; transform: scale(1.05); }
 
-    /* --- Bubble hiển thị điểm --- */
     #scoreBubble {
       position: fixed;
       bottom: 90px;
@@ -121,10 +123,11 @@
       font-weight: 600;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       display: none;
+      animation: fadeIn .25s ease;
       border: 1px solid #374151;
       white-space: nowrap;
-      animation: fadeIn .25s ease;
     }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
@@ -139,25 +142,23 @@
     <input type="text" id="name" placeholder="Nhập tên (có dấu)">
 
     <label>Ván số:</label>
-    <input type="number" id="round" value="1" min="1">
+    <input type="number" id="round" value="1" min="1" inputmode="numeric">
 
     <label>Số lá:</label>
-    <input type="number" id="value" inputmode="numeric" placeholder="Số lá thua">
-
-    <div class="plusminus">
-      <button id="minusBtn">−</button>
-      <button id="plusBtn">+</button>
+    <div class="row">
+      <input type="number" id="value" placeholder="Số lá thua" inputmode="numeric">
+      <button id="minusBtn" class="small-btn">−</button>
+      <button id="plusBtn" class="small-btn">+</button>
     </div>
 
-    <div class="row">
-      <button id="sendBtn">Thua</button>
-      <button id="nextRowBtn">Thắng</button>
+    <div class="row" style="margin-top:10px;">
+      <button id="sendBtn" class="btn-red">Thua</button>
+      <button id="winBtn" class="btn-green">Thắng</button>
     </div>
 
     <div id="status" class="muted">Chưa lưu...</div>
   </div>
 
-  <!-- Floating Button 💰 -->
   <button id="fab">💰</button>
   <div id="scoreBubble">Chưa lưu điểm.</div>
 
@@ -170,82 +171,113 @@
     const statusLbl = document.getElementById('status');
     const fab = document.getElementById('fab');
     const scoreBubble = document.getElementById('scoreBubble');
+    const plusBtn = document.getElementById('plusBtn');
+    const minusBtn = document.getElementById('minusBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const winBtn = document.getElementById('winBtn');
 
-    // Nhớ tên
-    if (localStorage.getItem('sheet_name')) nameInp.value = localStorage.getItem('sheet_name');
-    nameInp.addEventListener('change', () => localStorage.setItem('sheet_name', nameInp.value.trim()));
+    // Lưu tên người chơi
+    if (localStorage.getItem('sheet_name')) {
+      nameInp.value = localStorage.getItem('sheet_name');
+    }
+    nameInp.addEventListener('change', () => {
+      localStorage.setItem('sheet_name', nameInp.value.trim());
+    });
 
-    // Gửi dữ liệu (POST)
-    function sendResult(value) {
+    // Nút cộng/trừ số lá
+    plusBtn.addEventListener('click', () => {
+      valInp.value = (parseInt(valInp.value || '0') + 1).toString();
+    });
+    minusBtn.addEventListener('click', () => {
+      valInp.value = Math.max(0, parseInt(valInp.value || '0') - 1).toString();
+    });
+
+    // Gửi dữ liệu
+    sendBtn.addEventListener('click', () => {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
-      if (!name || isNaN(round)) { alert('⚠️ Nhập tên và ván hợp lệ'); return; }
+      const val = valInp.value.trim();
+
+      if (!name || isNaN(round) || !val) {
+        alert('⚠️ Nhập tên, ván và số lá!');
+        return;
+      }
 
       const row = round + 2;
       statusLbl.textContent = '⏳ Đang lưu kết quả...';
+
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ name, row, value })
+        body: JSON.stringify({ name, row, value: val })
       })
       .then(() => {
-        setTimeout(() => {
-          statusLbl.textContent = '✅ Đã gửi kết quả!';
-          valInp.value = ''; // xoá trắng ô
-          valInp.blur();
-          roundInp.value = round + 1;
-        }, 1500);
+        statusLbl.textContent = '✅ Đã lưu kết quả!';
+        valInp.value = '';
+        roundInp.value = round + 1;
       })
-      .catch(() => statusLbl.textContent = '❌ Lỗi gửi dữ liệu');
-    }
-
-    // Thua
-    document.getElementById('sendBtn').addEventListener('click', () => {
-      const val = valInp.value.trim();
-      if (!val) { alert('⚠️ Nhập số lá trước khi gửi'); return; }
-      sendResult(val);
+      .catch(() => {
+        statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
+      });
     });
 
-    // Thắng
-    document.getElementById('nextRowBtn').addEventListener('click', () => {
-      sendResult(''); // gửi ô trống
+    // Nút Thắng → xoá ô
+    winBtn.addEventListener('click', () => {
+      const name = nameInp.value.trim();
+      const round = parseInt(roundInp.value, 10);
+      const row = round + 2;
+
+      if (!name || isNaN(round)) {
+        alert('⚠️ Nhập tên và ván!');
+        return;
+      }
+
+      statusLbl.textContent = '⏳ Đang xoá kết quả...';
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ name, row, value: '' })
+      })
+      .then(() => {
+        statusLbl.textContent = '✅ Đã xoá kết quả!';
+        valInp.value = '';
+        roundInp.value = round + 1;
+      })
+      .catch(() => {
+        statusLbl.textContent = '❌ Lỗi khi xoá';
+      });
     });
 
-    // + / −
-    document.getElementById('plusBtn').addEventListener('click', e => {
-      e.preventDefault();
-      valInp.value = (parseInt(valInp.value || 0) + 1);
-    });
-    document.getElementById('minusBtn').addEventListener('click', e => {
-      e.preventDefault();
-      valInp.value = Math.max(0, parseInt(valInp.value || 0) - 1);
-    });
-
-    // 💰 Xem điểm
+    // Nút xem điểm
     fab.addEventListener('click', fetchSum);
+
     function fetchSum() {
       const name = nameInp.value.trim();
-      if (!name) return showScore('⚠️ Nhập tên!');
-      showScore('⏳ Đang tải...');
+      if (!name) {
+        showScore("⚠️ Nhập tên trước!");
+        return;
+      }
+      showScore("⏳ Đang tải...");
+
       fetch(SCRIPT_URL)
         .then(r => r.json())
         .then(data => {
-          if (data[name] !== undefined) showScore('💰 ' + data[name]);
-          else showScore('⚠️ Không thấy tên trong sheet');
+          if (data[name] !== undefined) showScore("💰 " + data[name]);
+          else showScore("⚠️ Không thấy tên");
         })
-        .catch(() => showScore('⚠️ Lỗi tải điểm'));
+        .catch(() => showScore("⚠️ Lỗi tải điểm"));
     }
+
     function showScore(msg) {
       scoreBubble.textContent = msg;
       scoreBubble.style.display = 'block';
       clearTimeout(scoreBubble.hideTimeout);
-      scoreBubble.hideTimeout = setTimeout(() => scoreBubble.style.display = 'none', 4000);
+      scoreBubble.hideTimeout = setTimeout(() => {
+        scoreBubble.style.display = 'none';
+      }, 4000);
     }
-
-    /* ✅ Chặn zoom pinch & double-tap trên iOS */
-    document.addEventListener('gesturestart', e => e.preventDefault());
-    document.addEventListener('dblclick', e => e.preventDefault());
   </script>
 </body>
 </html>
