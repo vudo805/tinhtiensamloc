@@ -170,7 +170,7 @@
 
     <label>Số lá:</label>
     <div class="row">
-      <input type="number" id="value" value="0" min="0" style="flex:1;">
+      <input type="text" id="value" value="0" inputmode="numeric" pattern="[0-9]*" style="flex:1;">
       <div class="plusminus">
         <button class="pm-btn" id="minusBtn">−</button>
         <button class="pm-btn" id="plusBtn">+</button>
@@ -233,7 +233,7 @@
       })
       .then(() => {
         setTimeout(() => {
-          statusLbl.textContent = clear ? '✅ Đã lưu kết quả!' : '✅ Đã lưu kết quả!';
+          statusLbl.textContent = clear ? '✅ Đã xoá kết quả!' : '✅ Đã lưu kết quả!';
         }, 1000);
         roundInp.value = round + 1;
         if (clear) valInp.value = ''; // xoá trắng
@@ -248,7 +248,7 @@
     });
 
     document.getElementById('nextRowBtn').addEventListener('click', () => {
-      sendData('', true); // gửi giá trị rỗng
+      sendData('', true); // gửi giá trị rỗng = xoá ô
     });
 
     fab.addEventListener('click', fetchSum);
