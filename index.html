@@ -233,7 +233,7 @@
         return;
       }
 
-      statusLbl.textContent = '⏳ Đang xoá kết quả...';
+      statusLbl.textContent = '⏳ Đang lưu kết quả...';
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -241,12 +241,12 @@
         body: JSON.stringify({ name, row, value: '' })
       })
       .then(() => {
-        statusLbl.textContent = '✅ Đã xoá kết quả!';
+        statusLbl.textContent = '✅ Đã lưu kết quả!';
         valInp.value = '';
         roundInp.value = round + 1;
       })
       .catch(() => {
-        statusLbl.textContent = '❌ Lỗi khi xoá';
+        statusLbl.textContent = '❌ Lỗi khi lưu';
       });
     });
 
