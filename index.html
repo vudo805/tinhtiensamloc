@@ -53,7 +53,6 @@
     }
     input::placeholder { color: #6b7280; }
 
-    /* Nút +/- */
     .plusminus {
       display: flex;
       justify-content: space-between;
@@ -72,7 +71,30 @@
     }
     .plusminus button:hover { background: #4b5563; }
 
-    /* Hàng nút Thua / Thắng */
+    /* --- Hàng nút số nhanh --- */
+    .quicknums {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+    .quicknums button {
+      flex: 1 1 18%;
+      min-width: 50px;
+      background: #1f2937;
+      color: #f1f5f9;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 8px 0;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s ease;
+    }
+    .quicknums button:hover {
+      background: #4b5563;
+    }
+
     .row {
       display: flex;
       gap: 8px;
@@ -163,6 +185,8 @@
       <button id="plusBtn">+</button>
     </div>
 
+    <div class="quicknums" id="quickNums"></div>
+
     <div class="row">
       <button id="sendBtn">Thua</button>
       <button id="nextRowBtn">Thắng</button>
@@ -221,9 +245,7 @@
     });
 
     // Thắng
-    document.getElementById('nextRowBtn').addEventListener('click', () => {
-      sendResult('');
-    });
+    document.getElementById('nextRowBtn').addEventListener('click', () => sendResult(''));
 
     // + / −
     document.getElementById('plusBtn').addEventListener('click', e => {
@@ -233,6 +255,16 @@
     document.getElementById('minusBtn').addEventListener('click', e => {
       e.preventDefault();
       valInp.value = Math.max(0, parseInt(valInp.value || 0) - 1);
+    });
+
+    // Nút số nhanh
+    const nums = [1,2,3,4,5,6,7,8,9,15,20];
+    const quick = document.getElementById('quickNums');
+    nums.forEach(n => {
+      const b = document.createElement('button');
+      b.textContent = n;
+      b.addEventListener('click', () => valInp.value = n);
+      quick.appendChild(b);
     });
 
     // 💰 Xem điểm
@@ -256,7 +288,6 @@
       scoreBubble.hideTimeout = setTimeout(() => scoreBubble.style.display = 'none', 4000);
     }
 
-    // Chặn zoom pinch & double-tap
     document.addEventListener('gesturestart', e => e.preventDefault());
     document.addEventListener('dblclick', e => e.preventDefault());
   </script>
