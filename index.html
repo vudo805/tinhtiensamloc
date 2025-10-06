@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>🂡 Sâm Lốc</title>
   <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/5/5c/Spades_suit.svg" type="image/svg+xml">
   <style>
@@ -19,11 +19,11 @@
       text-align: center;
       font-size: 22px;
       margin-bottom: 20px;
+      color: #e5e7eb;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      color: #e5e7eb;
     }
     .card {
       background: #111827;
@@ -38,81 +38,60 @@
       color: #9ca3af;
     }
     input, button {
-      padding: 10px;
       border-radius: 8px;
-      font-size: 15px;
       border: 1px solid #374151;
+      font-size: 15px;
       box-sizing: border-box;
     }
     input {
       width: 100%;
+      padding: 10px;
+      margin-top: 4px;
       background: #0f172a;
       color: #f1f5f9;
     }
     input::placeholder { color: #6b7280; }
-
+    button {
+      padding: 10px;
+      background: #374151;
+      color: #f3f4f6;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background .2s ease;
+    }
+    button:hover { background: #4b5563; }
     .row {
       display: flex;
       gap: 8px;
       align-items: center;
+      margin-top: 12px;
     }
-
     .muted {
       font-size: 13px;
       color: #6b7280;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
-    /* Nút Thắng / Thua */
     #sendBtn {
-      background: #dc2626;
-      color: #f3f4f6;
-      font-weight: 600;
-      flex: 1;
-      transition: transform 0.1s ease;
+      background: #ef4444; /* đỏ */
     }
-    #sendBtn:active { transform: scale(0.96); }
-    #sendBtn:hover { background: #ef4444; }
-
     #nextRowBtn {
-      background: #16a34a;
-      color: #f3f4f6;
-      font-weight: 600;
-      flex: 1;
-      transition: transform 0.1s ease;
+      background: #10b981; /* xanh */
     }
-    #nextRowBtn:active { transform: scale(0.96); }
-    #nextRowBtn:hover { background: #22c55e; }
 
-    /* + / - Buttons */
+    /* --- Nút + và − --- */
     .plusminus {
       display: flex;
-      gap: 6px;
-      margin-left: 4px;
-    }
-    .pm-btn {
-      background: #374151;
-      color: #f3f4f6;
-      border: none;
-      border-radius: 8px;
-      width: 42px;
-      height: 42px;
-      font-size: 22px;
-      cursor: pointer;
-      transition: background 0.2s ease, transform 0.1s ease;
-    }
-    .pm-btn:hover { background: #4b5563; }
-    .pm-btn:active { transform: scale(0.92); }
-
-    .buttons-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-      align-items: center;
       justify-content: space-between;
+      margin-top: 8px;
+    }
+    .plusminus button {
+      width: 48%;
+      font-size: 18px;
     }
 
-    /* Floating 💰 */
+    /* --- Floating Button 💰 --- */
     #fab {
       position: fixed;
       bottom: 20px;
@@ -136,6 +115,7 @@
       transform: scale(1.05);
     }
 
+    /* --- Bubble hiển thị điểm --- */
     #scoreBubble {
       position: fixed;
       bottom: 90px;
@@ -147,11 +127,10 @@
       font-weight: 600;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       display: none;
-      animation: fadeIn .25s ease;
       border: 1px solid #374151;
       white-space: nowrap;
+      animation: fadeIn .25s ease;
     }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
@@ -169,15 +148,14 @@
     <input type="number" id="round" value="1" min="1">
 
     <label>Số lá:</label>
-    <div class="row">
-      <input type="text" id="value" value="0" inputmode="numeric" pattern="[0-9]*" style="flex:1;">
-      <div class="plusminus">
-        <button class="pm-btn" id="minusBtn">−</button>
-        <button class="pm-btn" id="plusBtn">+</button>
-      </div>
+    <input type="number" id="value" inputmode="numeric" placeholder="Số lá thua">
+
+    <div class="plusminus">
+      <button id="minusBtn">−</button>
+      <button id="plusBtn">+</button>
     </div>
 
-    <div class="buttons-row">
+    <div class="row" style="margin-top:16px;">
       <button id="sendBtn">Thua</button>
       <button id="nextRowBtn">Thắng</button>
     </div>
@@ -199,32 +177,18 @@
     const fab = document.getElementById('fab');
     const scoreBubble = document.getElementById('scoreBubble');
 
-    if (localStorage.getItem('sheet_name')) {
-      nameInp.value = localStorage.getItem('sheet_name');
-    }
-    nameInp.addEventListener('change', () => {
-      localStorage.setItem('sheet_name', nameInp.value.trim());
-    });
+    // Nhớ tên người chơi
+    if (localStorage.getItem('sheet_name')) nameInp.value = localStorage.getItem('sheet_name');
+    nameInp.addEventListener('change', () => localStorage.setItem('sheet_name', nameInp.value.trim()));
 
-    document.getElementById('plusBtn').addEventListener('click', () => {
-      valInp.value = parseInt(valInp.value || 0) + 1;
-    });
-    document.getElementById('minusBtn').addEventListener('click', () => {
-      const v = parseInt(valInp.value || 0);
-      valInp.value = v > 0 ? v - 1 : 0;
-    });
-
-    function sendData(value, clear = false) {
+    // Hàm gửi dữ liệu (POST)
+    function sendResult(value) {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
-      if (!name || isNaN(round)) {
-        alert('⚠️ Vui lòng nhập tên và số ván');
-        return;
-      }
+      if (!name || isNaN(round)) { alert('⚠️ Nhập tên và ván hợp lệ'); return; }
 
       const row = round + 2;
       statusLbl.textContent = '⏳ Đang lưu kết quả...';
-
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -233,57 +197,55 @@
       })
       .then(() => {
         setTimeout(() => {
-          statusLbl.textContent = clear ? '✅ Đã xoá kết quả!' : '✅ Đã lưu kết quả!';
-        }, 1000);
-        roundInp.value = round + 1;
-        if (clear) valInp.value = ''; // xoá trắng
+          statusLbl.textContent = '✅ Đã gửi kết quả!';
+          valInp.value = ''; // Xóa ô nhập sau khi gửi
+          valInp.blur();
+          roundInp.value = round + 1;
+        }, 1500);
       })
-      .catch(() => {
-        statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
-      });
+      .catch(() => statusLbl.textContent = '❌ Lỗi gửi dữ liệu');
     }
 
+    // Nút Thua
     document.getElementById('sendBtn').addEventListener('click', () => {
-      sendData(valInp.value.trim());
+      const val = valInp.value.trim();
+      if (!val) { alert('⚠️ Nhập số lá trước khi gửi'); return; }
+      sendResult(val);
     });
 
+    // Nút Thắng
     document.getElementById('nextRowBtn').addEventListener('click', () => {
-      sendData('', true); // gửi giá trị rỗng = xoá ô
+      sendResult(''); // Gửi trắng = xoá ô
     });
 
-    fab.addEventListener('click', fetchSum);
+    // Nút + / −
+    document.getElementById('plusBtn').addEventListener('click', () => {
+      valInp.value = (parseInt(valInp.value || 0) + 1);
+    });
+    document.getElementById('minusBtn').addEventListener('click', () => {
+      valInp.value = Math.max(0, parseInt(valInp.value || 0) - 1);
+    });
 
+    // Floating xem điểm
+    fab.addEventListener('click', fetchSum);
     function fetchSum() {
       const name = nameInp.value.trim();
-      if (!name) {
-        showScore("⚠️ Nhập tên trước!");
-        return;
-      }
-      showScore("⏳ Đang tải...");
-
+      if (!name) return showScore('⚠️ Nhập tên!');
+      showScore('⏳ Đang tải...');
       fetch(SCRIPT_URL)
         .then(r => r.json())
         .then(data => {
-          if (data.error) {
-            showScore("❌ " + data.error);
-            return;
-          }
-          if (data[name] !== undefined) {
-            showScore("💰 " + data[name]);
-          } else {
-            showScore("⚠️ Không thấy tên trong sheet");
-          }
+          if (data[name] !== undefined) showScore('💰 ' + data[name]);
+          else showScore('⚠️ Không thấy tên trong sheet');
         })
-        .catch(() => showScore("⚠️ Không lấy được điểm"));
+        .catch(() => showScore('⚠️ Lỗi tải điểm'));
     }
 
     function showScore(msg) {
       scoreBubble.textContent = msg;
       scoreBubble.style.display = 'block';
       clearTimeout(scoreBubble.hideTimeout);
-      scoreBubble.hideTimeout = setTimeout(() => {
-        scoreBubble.style.display = 'none';
-      }, 4000);
+      scoreBubble.hideTimeout = setTimeout(() => scoreBubble.style.display = 'none', 4000);
     }
   </script>
 </body>
