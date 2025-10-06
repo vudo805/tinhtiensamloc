@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>🂡 Sâm Lốc</title>
-  <!-- Favicon quân ♠ -->
   <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/5/5c/Spades_suit.svg" type="image/svg+xml">
   <style>
     body {
@@ -14,6 +13,7 @@
       padding: 20px;
       background: #000;
       color: #d1d5db;
+      position: relative;
     }
     h1 {
       text-align: center;
@@ -38,50 +38,124 @@
       color: #9ca3af;
     }
     input, button {
-      width: 100%;
       padding: 10px;
-      margin-top: 4px;
       border-radius: 8px;
       font-size: 15px;
       border: 1px solid #374151;
-      box-sizing: border-box; /* Giữ kích thước ổn định */
+      box-sizing: border-box;
     }
     input {
+      width: 100%;
       background: #0f172a;
       color: #f1f5f9;
     }
     input::placeholder { color: #6b7280; }
-    button {
-      background: #374151;
-      color: #f3f4f6;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background .2s ease;
-    }
-    button:hover { background: #4b5563; }
+
     .row {
       display: flex;
       gap: 8px;
       align-items: center;
     }
+
     .muted {
       font-size: 13px;
       color: #6b7280;
-      margin-top: 6px;
+      margin-top: 8px;
     }
-    #sumBox {
-      margin-top: 10px;
-      padding: 10px;
-      background: #1f2937;
-      border-radius: 8px;
+
+    /* Nút Thắng / Thua */
+    #sendBtn {
+      background: #dc2626;
+      color: #f3f4f6;
       font-weight: 600;
-      text-align: center;
-      color: #e2e8f0;
-      border: 1px solid #374151;
+      flex: 1;
+      transition: transform 0.1s ease;
     }
-    #loadBtn, #nextRowBtn {
+    #sendBtn:active { transform: scale(0.96); }
+    #sendBtn:hover { background: #ef4444; }
+
+    #nextRowBtn {
+      background: #16a34a;
+      color: #f3f4f6;
+      font-weight: 600;
+      flex: 1;
+      transition: transform 0.1s ease;
+    }
+    #nextRowBtn:active { transform: scale(0.96); }
+    #nextRowBtn:hover { background: #22c55e; }
+
+    /* + / - Buttons */
+    .plusminus {
+      display: flex;
+      gap: 6px;
+      margin-left: 4px;
+    }
+    .pm-btn {
+      background: #374151;
+      color: #f3f4f6;
+      border: none;
+      border-radius: 8px;
+      width: 42px;
+      height: 42px;
+      font-size: 22px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    .pm-btn:hover { background: #4b5563; }
+    .pm-btn:active { transform: scale(0.92); }
+
+    /* Hàng nút Thắng / Thua cách ô nhập số */
+    .buttons-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Floating 💰 */
+    #fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #374151;
+      color: #f9fafb;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #fab:hover {
       background: #4b5563;
+      transform: scale(1.05);
+    }
+
+    #scoreBubble {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      background: #1f2937;
+      color: #e2e8f0;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      display: none;
+      animation: fadeIn .25s ease;
+      border: 1px solid #374151;
+      white-space: nowrap;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -92,24 +166,29 @@
     <label>Bạn là:</label>
     <input type="text" id="name" placeholder="Nhập tên (có dấu)">
 
-    <div class="row">
-      <button id="loadBtn">🔄 Xem điểm</button>
-    </div>
-    <div id="sumBox">Chưa tải tổng điểm.</div>
-
     <label>Ván số:</label>
     <input type="number" id="round" value="1" min="1">
 
     <label>Số lá:</label>
-    <input type="text" id="value" placeholder="Số lá thua">
-
     <div class="row">
-      <button id="sendBtn">💾 Gửi dữ liệu</button>
-      <button id="nextRowBtn">⏭ Ván mới (+1)</button>
+      <input type="number" id="value" value="0" min="0" style="flex:1;">
+      <div class="plusminus">
+        <button class="pm-btn" id="minusBtn">−</button>
+        <button class="pm-btn" id="plusBtn">+</button>
+      </div>
     </div>
 
-    <div id="status" class="muted">Chưa gửi...</div>
+    <div class="buttons-row">
+      <button id="sendBtn">Thua</button>
+      <button id="nextRowBtn">Thắng</button>
+    </div>
+
+    <div id="status" class="muted">Chưa lưu...</div>
   </div>
+
+  <!-- Floating Button 💰 -->
+  <button id="fab">💰</button>
+  <div id="scoreBubble">Chưa lưu điểm.</div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziZMsPZeTGcbgSxsBAcecddw64Rqn9WvgYExNGzi6Rpbr6WCrAbY3U-N_WhoJQOMnO/exec";
@@ -118,7 +197,8 @@
     const roundInp = document.getElementById('round');
     const valInp = document.getElementById('value');
     const statusLbl = document.getElementById('status');
-    const sumBox = document.getElementById('sumBox');
+    const fab = document.getElementById('fab');
+    const scoreBubble = document.getElementById('scoreBubble');
 
     // Nhớ tên người chơi
     if (localStorage.getItem('sheet_name')) {
@@ -128,72 +208,94 @@
       localStorage.setItem('sheet_name', nameInp.value.trim());
     });
 
-    // Gửi dữ liệu (POST)
-    document.getElementById('sendBtn').addEventListener('click', () => {
+    // Nút + / -
+    document.getElementById('plusBtn').addEventListener('click', () => {
+      valInp.value = parseInt(valInp.value || 0) + 1;
+    });
+    document.getElementById('minusBtn').addEventListener('click', () => {
+      const v = parseInt(valInp.value || 0);
+      valInp.value = v > 0 ? v - 1 : 0;
+    });
+
+    // Hàm gửi dữ liệu
+    function sendData(value) {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
-      const val = valInp.value.trim();
 
-      if (!name || isNaN(round) || !val) {
-        alert('⚠️ Vui lòng nhập đầy đủ tên, ván và số lá');
+      if (!name || isNaN(round)) {
+        alert('⚠️ Vui lòng nhập đầy đủ tên và ván');
         return;
       }
 
       const row = round + 2;
-      statusLbl.textContent = '⏳ Đang gửi...';
+      statusLbl.textContent = '⏳ Đang lưu kết quả...';
 
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ name, row, value: val })
+        body: JSON.stringify({ name, row, value })
       })
       .then(() => {
-        statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
-        valInp.value = '';
-        valInp.focus();
-        roundInp.value = parseInt(roundInp.value) + 1;
+        setTimeout(() => {
+          statusLbl.textContent = '✅ Đã lưu kết quả!';
+        }, 2000);
+        roundInp.value = round + 1;
       })
-      .catch(err => {
+      .catch(() => {
         statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
-        console.error(err);
       });
+    }
+
+    // Nút Thua
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      sendData(valInp.value.trim());
     });
 
-    // Nút sang ván mới
+    // Nút Thắng
     document.getElementById('nextRowBtn').addEventListener('click', () => {
-      const cur = parseInt(roundInp.value, 10) || 0;
-      roundInp.value = cur + 1;
-      valInp.focus();
+      statusLbl.textContent = '⏳ Đang lưu kết quả...';
+      setTimeout(() => {
+        sendData(0);
+      }, 1000);
     });
 
-    // Nút Xem điểm (GET)
-    document.getElementById('loadBtn').addEventListener('click', fetchSum);
+    // Floating "Xem điểm"
+    fab.addEventListener('click', () => {
+      fetchSum();
+    });
 
     function fetchSum() {
       const name = nameInp.value.trim();
       if (!name) {
-        sumBox.textContent = "⚠️ Vui lòng nhập tên trước khi xem điểm.";
+        showScore("⚠️ Nhập tên trước!");
         return;
       }
+      showScore("⏳ Đang tải...");
 
-      sumBox.textContent = "⏳ Đang tải tổng điểm...";
       fetch(SCRIPT_URL)
         .then(r => r.json())
         .then(data => {
           if (data.error) {
-            sumBox.textContent = "❌ " + data.error;
+            showScore("❌ " + data.error);
             return;
           }
           if (data[name] !== undefined) {
-            sumBox.textContent = "Điểm hiện tại: " + data[name];
+            showScore("💰 " + data[name]);
           } else {
-            sumBox.textContent = "⚠️ Không tìm thấy tên này trong sheet.";
+            showScore("⚠️ Không thấy tên trong sheet");
           }
         })
-        .catch(() => {
-          sumBox.textContent = "⚠️ Không lấy được tổng điểm.";
-        });
+        .catch(() => showScore("⚠️ Không lấy được điểm"));
+    }
+
+    function showScore(msg) {
+      scoreBubble.textContent = msg;
+      scoreBubble.style.display = 'block';
+      clearTimeout(scoreBubble.hideTimeout);
+      scoreBubble.hideTimeout = setTimeout(() => {
+        scoreBubble.style.display = 'none';
+      }, 4000);
     }
   </script>
 </body>
