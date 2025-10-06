@@ -11,8 +11,8 @@
       max-width: 420px;
       margin: 40px auto;
       padding: 20px;
-      background: #000; /* nền đen tuyệt đối */
-      color: #d1d5db;  /* chữ xám nhạt */
+      background: #000;
+      color: #d1d5db;
     }
     h1 {
       text-align: center;
@@ -25,7 +25,7 @@
       color: #e5e7eb;
     }
     .card {
-      background: #111827; /* xám đậm */
+      background: #111827;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, .6);
       padding: 16px;
@@ -43,14 +43,26 @@
       border-radius: 8px;
       font-size: 15px;
       border: 1px solid #374151;
+      box-sizing: border-box;
     }
     input {
       background: #0f172a;
       color: #f1f5f9;
     }
     input::placeholder { color: #6b7280; }
+
+    /* Ẩn nút tăng giảm của input number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
     button {
-      background: #374151;  /* nút xám tối */
+      background: #374151;
       color: #f3f4f6;
       border: none;
       cursor: pointer;
@@ -80,16 +92,14 @@
       color: #e2e8f0;
       border: 1px solid #374151;
     }
-    #loadBtn {
-      background: #4b5563;
-    }
+    #loadBtn,
     #nextRowBtn {
       background: #4b5563;
     }
   </style>
 </head>
 <body>
-  <h1>🂡 Sâm Lốc (ghi kết quả)</h1>
+  <h1>🂡 Sâm Lốc</h1>
 
   <div class="card">
     <label>Bạn là:</label>
@@ -123,7 +133,6 @@
     const statusLbl = document.getElementById('status');
     const sumBox = document.getElementById('sumBox');
 
-    // Nhớ tên người chơi
     if (localStorage.getItem('sheet_name')) {
       nameInp.value = localStorage.getItem('sheet_name');
     }
@@ -131,20 +140,16 @@
       localStorage.setItem('sheet_name', nameInp.value.trim());
     });
 
-    // Gửi dữ liệu (POST)
     document.getElementById('sendBtn').addEventListener('click', () => {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
       const val = valInp.value.trim();
-
       if (!name || isNaN(round) || !val) {
         alert('⚠️ Vui lòng nhập đầy đủ tên, ván và nội dung');
         return;
       }
-
       const row = round + 2;
       statusLbl.textContent = '⏳ Đang gửi...';
-
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -163,14 +168,12 @@
       });
     });
 
-    // Nút sang ván mới
     document.getElementById('nextRowBtn').addEventListener('click', () => {
       const cur = parseInt(roundInp.value, 10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
 
-    // Nút Load điểm (GET)
     document.getElementById('loadBtn').addEventListener('click', fetchSum);
 
     function fetchSum() {
@@ -179,7 +182,6 @@
         sumBox.textContent = "⚠️ Vui lòng nhập tên trước khi load điểm.";
         return;
       }
-
       sumBox.textContent = "⏳ Đang tải tổng điểm...";
       fetch(SCRIPT_URL)
         .then(r => r.json())
