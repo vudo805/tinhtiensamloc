@@ -104,7 +104,6 @@
     .pm-btn:hover { background: #4b5563; }
     .pm-btn:active { transform: scale(0.92); }
 
-    /* Hàng nút Thắng / Thua cách ô nhập số */
     .buttons-row {
       display: flex;
       gap: 8px;
@@ -200,7 +199,6 @@
     const fab = document.getElementById('fab');
     const scoreBubble = document.getElementById('scoreBubble');
 
-    // Nhớ tên người chơi
     if (localStorage.getItem('sheet_name')) {
       nameInp.value = localStorage.getItem('sheet_name');
     }
@@ -208,7 +206,6 @@
       localStorage.setItem('sheet_name', nameInp.value.trim());
     });
 
-    // Nút + / -
     document.getElementById('plusBtn').addEventListener('click', () => {
       valInp.value = parseInt(valInp.value || 0) + 1;
     });
@@ -217,13 +214,11 @@
       valInp.value = v > 0 ? v - 1 : 0;
     });
 
-    // Hàm gửi dữ liệu
-    function sendData(value) {
+    function sendData(value, clear = false) {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
-
       if (!name || isNaN(round)) {
-        alert('⚠️ Vui lòng nhập đầy đủ tên và ván');
+        alert('⚠️ Vui lòng nhập tên và số ván');
         return;
       }
 
@@ -238,32 +233,25 @@
       })
       .then(() => {
         setTimeout(() => {
-          statusLbl.textContent = '✅ Đã lưu kết quả!';
-        }, 2000);
+          statusLbl.textContent = clear ? '✅ Đã lưu kết quả!' : '✅ Đã lưu kết quả!';
+        }, 1000);
         roundInp.value = round + 1;
+        if (clear) valInp.value = ''; // xoá trắng
       })
       .catch(() => {
         statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
       });
     }
 
-    // Nút Thua
     document.getElementById('sendBtn').addEventListener('click', () => {
       sendData(valInp.value.trim());
     });
 
-    // Nút Thắng
     document.getElementById('nextRowBtn').addEventListener('click', () => {
-      statusLbl.textContent = '⏳ Đang lưu kết quả...';
-      setTimeout(() => {
-        sendData(0);
-      }, 1000);
+      sendData('', true); // gửi giá trị rỗng
     });
 
-    // Floating "Xem điểm"
-    fab.addEventListener('click', () => {
-      fetchSum();
-    });
+    fab.addEventListener('click', fetchSum);
 
     function fetchSum() {
       const name = nameInp.value.trim();
