@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Nhập kết quả theo ván (ghi vào Sheet 1)</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nhập kết quả theo ván (Sheet 1)</title>
   <style>
     body {
       font-family: system-ui, Arial, sans-serif;
@@ -21,7 +21,7 @@
     .card {
       background: #fff;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,.06);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .06);
       padding: 16px;
     }
     label {
@@ -44,9 +44,7 @@
       margin-top: 12px;
       cursor: pointer;
     }
-    button:hover {
-      opacity: 0.9;
-    }
+    button:hover { opacity: 0.9; }
     .row {
       display: flex;
       gap: 8px;
@@ -69,10 +67,10 @@
 </head>
 <body>
   <h1>📊 Ghi dữ liệu vào Google Sheet (Sheet 1)</h1>
+
   <div class="card">
     <label>Bạn là:</label>
     <input type="text" id="name" placeholder="Nhập tên (có dấu, giống hàng 1)">
-
     <div id="sumBox">Tổng hiện tại: —</div>
 
     <label>Ván số:</label>
@@ -90,7 +88,7 @@
   </div>
 
   <script>
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw7RBZoxu_vZ4HCOVBScukTDTCdBpmisv8pE8R4DhrLpwu7SJyQ8gWM7KkvV0KO14bu/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwsCAPRPCMgauNG6nFJB7CnnhU15h12JSPfUeepqtsZE-agsUXfRRdjv6FAGwB_VykX/exec";
 
     const nameInp = document.getElementById('name');
     const roundInp = document.getElementById('round');
@@ -98,7 +96,7 @@
     const statusLbl = document.getElementById('status');
     const sumBox = document.getElementById('sumBox');
 
-    // nhớ tên người dùng
+    // Lưu tên người chơi để lần sau tự điền
     if (localStorage.getItem('sheet_name')) {
       nameInp.value = localStorage.getItem('sheet_name');
       fetchSum();
@@ -108,20 +106,21 @@
       fetchSum();
     });
 
+    // Gửi dữ liệu (POST)
     document.getElementById('sendBtn').addEventListener('click', () => {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
       const val = valInp.value.trim();
+
       if (!name || isNaN(round) || !val) {
-        alert('Vui lòng nhập đầy đủ tên, ván và nội dung');
+        alert('⚠️ Vui lòng nhập đầy đủ tên, ván và nội dung');
         return;
       }
 
-      const row = round + 2;  // hàng 1 = tên, hàng 2 = SUM
-
+      const row = round + 2; // Hàng 1 = tên, hàng 2 = tổng, dữ liệu bắt đầu từ hàng 3
       statusLbl.textContent = '⏳ Đang gửi...';
 
-      fetch(GOOGLE_SHEET_URL, {
+      fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -131,8 +130,8 @@
         statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
         valInp.value = '';
         valInp.focus();
-        roundInp.value = parseInt(roundInp.value) + 1;
-        fetchSum();
+        roundInp.value = parseInt(roundInp.value) + 1; // Tự tăng ván
+        fetchSum(); // Cập nhật tổng điểm mới
       })
       .catch(err => {
         statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
@@ -140,33 +139,35 @@
       });
     });
 
+    // Nút sang ván mới
     document.getElementById('nextRowBtn').addEventListener('click', () => {
       const cur = parseInt(roundInp.value, 10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
 
+    // Gọi doGet() để lấy tổng điểm
     function fetchSum() {
       const name = nameInp.value.trim();
       if (!name) return;
-      // Link CSV công khai của sheet, bạn cần Publish the sheet as CSV và dùng link này
-      const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vYOUR_SHEET_ID/pub?gid=0&single=true&output=csv";
-      fetch(sheetCSV)
-      .then(r => r.text())
-      .then(txt => {
-        const lines = txt.split("\n").map(l => l.split(","));
-        const headers = lines[0];
-        const sums = lines[1];
-        const idx = headers.findIndex(h => h.trim().toLowerCase() === name.trim().toLowerCase());
-        if (idx >= 0) {
-          sumBox.textContent = "Tổng hiện tại: " + sums[idx];
-        } else {
-          sumBox.textContent = "Không tìm thấy tên trong Sheet.";
-        }
-      })
-      .catch(() => {
-        sumBox.textContent = "Không lấy được tổng hiện tại.";
-      });
+
+      sumBox.textContent = "⏳ Đang tải tổng điểm...";
+      fetch(SCRIPT_URL)
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) {
+            sumBox.textContent = "❌ " + data.error;
+            return;
+          }
+          if (data[name] !== undefined) {
+            sumBox.textContent = "Tổng hiện tại: " + data[name];
+          } else {
+            sumBox.textContent = "Không tìm thấy tên này trong sheet.";
+          }
+        })
+        .catch(() => {
+          sumBox.textContent = "⚠️ Không lấy được tổng điểm.";
+        });
     }
   </script>
 </body>
