@@ -3,27 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>🂡 Sâm Lốc – Ghi & Xem điểm</title>
+  <title>🂡 Sâm Lốc (ghi kết quả)</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4151/4151022.png">
   <style>
     body {
       font-family: system-ui, Arial, sans-serif;
       max-width: 420px;
       margin: 40px auto;
       padding: 20px;
-      background: #000;
-      color: #e2e8f0;
+      background: #0f172a;
+      color: #f8fafc;
     }
     h1 {
       text-align: center;
       font-size: 22px;
       margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     .card {
-      background: #111827;
+      background: #1e293b;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.6);
-      padding: 18px;
-      margin-bottom: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
+      padding: 16px;
     }
     label {
       display: block;
@@ -34,146 +38,158 @@
       width: 100%;
       padding: 10px;
       margin-top: 4px;
+      border: 1px solid #334155;
       border-radius: 8px;
       font-size: 15px;
-      border: 1px solid #374151;
+    }
+    input {
       background: #0f172a;
       color: #f8fafc;
     }
-    input::placeholder { color: #64748b; }
     button {
-      background: #475569;
-      color: white;
-      border: none;
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      margin-top: 12px;
       cursor: pointer;
-      font-weight: 600;
-      transition: background .2s;
     }
-    button:hover { background: #64748b; }
-    .row { display: flex; gap: 8px; align-items: center; }
-    .muted { font-size: 13px; color: #94a3b8; margin-top: 6px; }
-    #scores {
-      background:#0f172a;
-      border-radius:10px;
-      padding:10px;
-      font-size:14px;
-      margin-top:12px;
-      white-space:pre-line;
-      text-align:center;
+    button:hover { opacity: 0.9; }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .muted {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+    #sumBox {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1e40af;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      color: #f1f5f9;
+    }
+    #loadBtn {
+      background: #0ea5e9;
+      color: #fff;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <h1>🂡 Sâm Lốc – Ghi & Xem điểm</h1>
+  <h1>🂡 Sâm Lốc (ghi kết quả)</h1>
 
   <div class="card">
     <label>Bạn là:</label>
     <input type="text" id="name" placeholder="Nhập tên (có dấu, giống hàng 1)">
 
+    <div class="row">
+      <button id="loadBtn">🔄 Load điểm</button>
+    </div>
+    <div id="sumBox">Chưa tải tổng điểm.</div>
+
     <label>Ván số:</label>
     <input type="number" id="round" value="1" min="1">
 
-    <label>Điểm ghi:</label>
-    <input type="text" id="value" placeholder="Nhập điểm thắng/thua...">
+    <label>Giá trị nhập:</label>
+    <input type="text" id="value" placeholder="Nhập nội dung...">
 
     <div class="row">
       <button id="sendBtn">💾 Gửi dữ liệu</button>
-      <button id="nextRowBtn">⏭ Ván mới (+1)</button>
+      <button id="nextRowBtn" style="background:#10b981">⏭ Ván mới (+1)</button>
     </div>
+
     <div id="status" class="muted">Chưa gửi...</div>
   </div>
 
-  <div class="card" style="text-align:center">
-    <button id="loadScores">🔍 Xem điểm của tôi</button>
-    <div id="scores" class="muted">Chưa tải điểm...</div>
-  </div>
-
   <script>
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbziZMsPZeTGcbgSxsBAcecddw64Rqn9WvgYExNGzi6Rpbr6WCrAbY3U-N_WhoJQOMnO/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziZMsPZeTGcbgSxsBAcecddw64Rqn9WvgYExNGzi6Rpbr6WCrAbY3U-N_WhoJQOMnO/exec";
 
     const nameInp = document.getElementById('name');
     const roundInp = document.getElementById('round');
     const valInp = document.getElementById('value');
     const statusLbl = document.getElementById('status');
-    const scoresDiv = document.getElementById('scores');
+    const sumBox = document.getElementById('sumBox');
 
-    // lưu tên cục bộ
-    if(localStorage.getItem('sam_name')){
-      nameInp.value = localStorage.getItem('sam_name');
+    // Nhớ tên người chơi
+    if (localStorage.getItem('sheet_name')) {
+      nameInp.value = localStorage.getItem('sheet_name');
     }
-    nameInp.addEventListener('change', ()=>{
-      localStorage.setItem('sam_name', nameInp.value.trim());
+    nameInp.addEventListener('change', () => {
+      localStorage.setItem('sheet_name', nameInp.value.trim());
     });
 
-    // gửi dữ liệu
-    document.getElementById('sendBtn').addEventListener('click', ()=>{
+    // Gửi dữ liệu (POST)
+    document.getElementById('sendBtn').addEventListener('click', () => {
       const name = nameInp.value.trim();
-      const round = parseInt(roundInp.value,10);
+      const round = parseInt(roundInp.value, 10);
       const val = valInp.value.trim();
-      if(!name || isNaN(round) || !val){
-        alert('⚠️ Vui lòng nhập đầy đủ Tên, Ván, và Điểm.');
+
+      if (!name || isNaN(round) || !val) {
+        alert('⚠️ Vui lòng nhập đầy đủ tên, ván và nội dung');
         return;
       }
 
       const row = round + 2;
       statusLbl.textContent = '⏳ Đang gửi...';
 
-      fetch(GOOGLE_SHEET_URL, {
+      fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ name, row, value: val })
       })
-      .then(res => res.text())
-      .then(txt => {
-        statusLbl.textContent = txt.includes('✅')
-          ? '✅ Gửi thành công cho ' + name
-          : '⚠️ ' + txt;
+      .then(() => {
+        statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
         valInp.value = '';
         valInp.focus();
-        roundInp.value = round + 1;
+        roundInp.value = parseInt(roundInp.value) + 1;
       })
       .catch(err => {
-        console.error(err);
         statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
+        console.error(err);
       });
     });
 
-    // ván mới
-    document.getElementById('nextRowBtn').addEventListener('click', ()=>{
-      const cur = parseInt(roundInp.value,10) || 0;
+    // Nút sang ván mới
+    document.getElementById('nextRowBtn').addEventListener('click', () => {
+      const cur = parseInt(roundInp.value, 10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
 
-    // xem điểm của bản thân
-    document.getElementById('loadScores').addEventListener('click', ()=>{
-      const selfName = nameInp.value.trim();
-      if(!selfName){
-        alert("⚠️ Hãy nhập tên trước khi xem điểm!");
+    // Nút Load điểm (GET)
+    document.getElementById('loadBtn').addEventListener('click', fetchSum);
+
+    function fetchSum() {
+      const name = nameInp.value.trim();
+      if (!name) {
+        sumBox.textContent = "⚠️ Vui lòng nhập tên trước khi load điểm.";
         return;
       }
-      scoresDiv.textContent = '⏳ Đang tải điểm...';
 
-      fetch(GOOGLE_SHEET_URL)
+      sumBox.textContent = "⏳ Đang tải tổng điểm...";
+      fetch(SCRIPT_URL)
         .then(r => r.json())
         .then(data => {
-          if(data.error){
-            scoresDiv.textContent = "❌ " + data.error;
+          if (data.error) {
+            sumBox.textContent = "❌ " + data.error;
             return;
           }
-          const keys = Object.keys(data);
-          const match = keys.find(k => k.trim().toLowerCase() === selfName.trim().toLowerCase());
-          if(match){
-            scoresDiv.textContent = `📊 ${match}: ${data[match]}`;
+          if (data[name] !== undefined) {
+            sumBox.textContent = "Tổng hiện tại: " + data[name];
           } else {
-            scoresDiv.textContent = "⚠️ Không tìm thấy tên trong bảng điểm.";
+            sumBox.textContent = "⚠️ Không tìm thấy tên này trong sheet.";
           }
         })
-        .catch(err => {
-          console.error(err);
-          scoresDiv.textContent = '❌ Lỗi tải dữ liệu';
+        .catch(() => {
+          sumBox.textContent = "⚠️ Không lấy được tổng điểm.";
         });
-    });
+    }
   </script>
 </body>
 </html>
