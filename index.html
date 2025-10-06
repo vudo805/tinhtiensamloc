@@ -1,19 +1,70 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Nhập kết quả theo ván (ghi vào Sheet 1)</title>
   <style>
-    body{font-family:system-ui,Arial,sans-serif;max-width:420px;margin:40px auto;padding:20px;background:#f8fafc;color:#111}
-    h1{text-align:center;font-size:20px;margin-bottom:20px}
-    .card{background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.06);padding:16px}
-    label{display:block;margin-top:10px;font-weight:600}
-    input,button{width:100%;padding:10px;margin-top:4px;border:1px solid #d1d5db;border-radius:8px;font-size:15px}
-    button{background:#2563eb;color:#fff;border:0;margin-top:12px;cursor:pointer}
-    button:hover{opacity:0.9}
-    .row{display:flex;gap:8px;align-items:center}
-    .muted{font-size:13px;color:#6b7280;margin-top:6px}
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,.06);
+      padding: 16px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .muted {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+    #sumBox {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #eef2ff;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -21,6 +72,8 @@
   <div class="card">
     <label>Bạn là:</label>
     <input type="text" id="name" placeholder="Nhập tên (có dấu, giống hàng 1)">
+
+    <div id="sumBox">Tổng hiện tại: —</div>
 
     <label>Ván số:</label>
     <input type="number" id="round" value="1" min="1">
@@ -32,27 +85,29 @@
       <button id="sendBtn">💾 Gửi dữ liệu</button>
       <button id="nextRowBtn" style="background:#10b981">⏭ Ván mới (+1)</button>
     </div>
+
     <div id="status" class="muted">Chưa gửi...</div>
   </div>
 
   <script>
-    // ✅ URL mới của Apps Script
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby8tTtswvA1Mt6X35UR6tSiLuxjO-EB31Hm1MEHVYWzrU6fZ5E2jaO2NUc0SebiUUFw/exec";
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw7RBZoxu_vZ4HCOVBScukTDTCdBpmisv8pE8R4DhrLpwu7SJyQ8gWM7KkvV0KO14bu/exec";
 
     const nameInp = document.getElementById('name');
     const roundInp = document.getElementById('round');
     const valInp = document.getElementById('value');
     const statusLbl = document.getElementById('status');
+    const sumBox = document.getElementById('sumBox');
 
-    // ✅ Lưu tên để lần sau tự nhớ
+    // nhớ tên người dùng
     if (localStorage.getItem('sheet_name')) {
       nameInp.value = localStorage.getItem('sheet_name');
+      fetchSum();
     }
     nameInp.addEventListener('change', () => {
       localStorage.setItem('sheet_name', nameInp.value.trim());
+      fetchSum();
     });
 
-    // ✅ Gửi dữ liệu
     document.getElementById('sendBtn').addEventListener('click', () => {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
@@ -62,22 +117,22 @@
         return;
       }
 
-      // hàng 1 = tiêu đề, hàng 2 = SUM → dữ liệu bắt đầu từ hàng 3
-      const row = round + 2;
+      const row = round + 2;  // hàng 1 = tên, hàng 2 = SUM
 
       statusLbl.textContent = '⏳ Đang gửi...';
 
-      // ⚙️ Dùng no-cors để tránh CORS
       fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // tránh preflight
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ name, row, value: val })
       })
       .then(() => {
         statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
         valInp.value = '';
         valInp.focus();
+        roundInp.value = parseInt(roundInp.value) + 1;
+        fetchSum();
       })
       .catch(err => {
         statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
@@ -85,12 +140,34 @@
       });
     });
 
-    // ✅ Nút chuyển sang ván mới
     document.getElementById('nextRowBtn').addEventListener('click', () => {
       const cur = parseInt(roundInp.value, 10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
+
+    function fetchSum() {
+      const name = nameInp.value.trim();
+      if (!name) return;
+      // Link CSV công khai của sheet, bạn cần Publish the sheet as CSV và dùng link này
+      const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vYOUR_SHEET_ID/pub?gid=0&single=true&output=csv";
+      fetch(sheetCSV)
+      .then(r => r.text())
+      .then(txt => {
+        const lines = txt.split("\n").map(l => l.split(","));
+        const headers = lines[0];
+        const sums = lines[1];
+        const idx = headers.findIndex(h => h.trim().toLowerCase() === name.trim().toLowerCase());
+        if (idx >= 0) {
+          sumBox.textContent = "Tổng hiện tại: " + sums[idx];
+        } else {
+          sumBox.textContent = "Không tìm thấy tên trong Sheet.";
+        }
+      })
+      .catch(() => {
+        sumBox.textContent = "Không lấy được tổng hiện tại.";
+      });
+    }
   </script>
 </body>
 </html>
