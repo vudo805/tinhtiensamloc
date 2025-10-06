@@ -157,7 +157,7 @@
         body: JSON.stringify({ name, row, value: val })
       })
       .then(() => {
-        statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
+        statusLbl.textContent = '✅ Đã gửi!';
         valInp.value = '';
         valInp.focus();
         roundInp.value = parseInt(roundInp.value) + 1;
