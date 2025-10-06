@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>🂡 Sâm Lốc</title>
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4151/4151022.png">
+  <!-- Favicon quân ♠ -->
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/5/5c/Spades_suit.svg" type="image/svg+xml">
   <style>
     body {
       font-family: system-ui, Arial, sans-serif;
@@ -43,24 +44,13 @@
       border-radius: 8px;
       font-size: 15px;
       border: 1px solid #374151;
-      box-sizing: border-box;
+      box-sizing: border-box; /* Giữ kích thước ổn định */
     }
     input {
       background: #0f172a;
       color: #f1f5f9;
     }
     input::placeholder { color: #6b7280; }
-
-    /* Ẩn nút tăng giảm của input number */
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
-
     button {
       background: #374151;
       color: #f3f4f6;
@@ -69,9 +59,7 @@
       font-weight: 600;
       transition: background .2s ease;
     }
-    button:hover {
-      background: #4b5563;
-    }
+    button:hover { background: #4b5563; }
     .row {
       display: flex;
       gap: 8px;
@@ -92,21 +80,20 @@
       color: #e2e8f0;
       border: 1px solid #374151;
     }
-    #loadBtn,
-    #nextRowBtn {
+    #loadBtn, #nextRowBtn {
       background: #4b5563;
     }
   </style>
 </head>
 <body>
-  <h1>🂡 Sâm Lốc</h1>
+  <h1>🂡 Sâm Lốc (ghi kết quả)</h1>
 
   <div class="card">
     <label>Bạn là:</label>
     <input type="text" id="name" placeholder="Nhập tên (có dấu)">
 
     <div class="row">
-      <button id="loadBtn">🔄 Load điểm</button>
+      <button id="loadBtn">🔄 Xem điểm</button>
     </div>
     <div id="sumBox">Chưa tải tổng điểm.</div>
 
@@ -133,6 +120,7 @@
     const statusLbl = document.getElementById('status');
     const sumBox = document.getElementById('sumBox');
 
+    // Nhớ tên người chơi
     if (localStorage.getItem('sheet_name')) {
       nameInp.value = localStorage.getItem('sheet_name');
     }
@@ -140,16 +128,20 @@
       localStorage.setItem('sheet_name', nameInp.value.trim());
     });
 
+    // Gửi dữ liệu (POST)
     document.getElementById('sendBtn').addEventListener('click', () => {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
       const val = valInp.value.trim();
+
       if (!name || isNaN(round) || !val) {
-        alert('⚠️ Vui lòng nhập đầy đủ tên, ván và nội dung');
+        alert('⚠️ Vui lòng nhập đầy đủ tên, ván và số lá');
         return;
       }
+
       const row = round + 2;
       statusLbl.textContent = '⏳ Đang gửi...';
+
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -157,7 +149,7 @@
         body: JSON.stringify({ name, row, value: val })
       })
       .then(() => {
-        statusLbl.textContent = '✅ Đã gửi!';
+        statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
         valInp.value = '';
         valInp.focus();
         roundInp.value = parseInt(roundInp.value) + 1;
@@ -168,20 +160,23 @@
       });
     });
 
+    // Nút sang ván mới
     document.getElementById('nextRowBtn').addEventListener('click', () => {
       const cur = parseInt(roundInp.value, 10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
 
+    // Nút Xem điểm (GET)
     document.getElementById('loadBtn').addEventListener('click', fetchSum);
 
     function fetchSum() {
       const name = nameInp.value.trim();
       if (!name) {
-        sumBox.textContent = "⚠️ Vui lòng nhập tên trước khi load điểm.";
+        sumBox.textContent = "⚠️ Vui lòng nhập tên trước khi xem điểm.";
         return;
       }
+
       sumBox.textContent = "⏳ Đang tải tổng điểm...";
       fetch(SCRIPT_URL)
         .then(r => r.json())
@@ -191,7 +186,7 @@
             return;
           }
           if (data[name] !== undefined) {
-            sumBox.textContent = "Tổng hiện tại: " + data[name];
+            sumBox.textContent = "Điểm hiện tại: " + data[name];
           } else {
             sumBox.textContent = "⚠️ Không tìm thấy tên này trong sheet.";
           }
