@@ -10,8 +10,8 @@
       max-width: 420px;
       margin: 40px auto;
       padding: 20px;
-      background: #0f172a;
-      color: #f1f5f9;
+      background: #000;
+      color: #e2e8f0;
     }
     h1 {
       text-align: center;
@@ -19,9 +19,9 @@
       margin-bottom: 20px;
     }
     .card {
-      background: #1e293b;
+      background: #111827;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,.6);
       padding: 18px;
       margin-bottom: 16px;
     }
@@ -36,23 +36,31 @@
       margin-top: 4px;
       border-radius: 8px;
       font-size: 15px;
-      border: 1px solid #334155;
+      border: 1px solid #374151;
       background: #0f172a;
       color: #f8fafc;
     }
     input::placeholder { color: #64748b; }
     button {
-      background: #2563eb;
+      background: #475569;
       color: white;
       border: none;
       cursor: pointer;
       font-weight: 600;
+      transition: background .2s;
     }
-    button:hover { opacity: 0.9; }
+    button:hover { background: #64748b; }
     .row { display: flex; gap: 8px; align-items: center; }
     .muted { font-size: 13px; color: #94a3b8; margin-top: 6px; }
-    #scores { background:#0f172a; border-radius:10px; padding:10px; font-size:14px; white-space:pre-line; margin-top:12px; }
-    #loadScores { background:#10b981; }
+    #scores {
+      background:#0f172a;
+      border-radius:10px;
+      padding:10px;
+      font-size:14px;
+      margin-top:12px;
+      white-space:pre-line;
+      text-align:center;
+    }
   </style>
 </head>
 <body>
@@ -70,18 +78,18 @@
 
     <div class="row">
       <button id="sendBtn">💾 Gửi dữ liệu</button>
-      <button id="nextRowBtn" style="background:#0ea5e9">⏭ Ván mới (+1)</button>
+      <button id="nextRowBtn">⏭ Ván mới (+1)</button>
     </div>
     <div id="status" class="muted">Chưa gửi...</div>
   </div>
 
   <div class="card" style="text-align:center">
-    <button id="loadScores">🔄 Xem điểm</button>
+    <button id="loadScores">🔍 Xem điểm của tôi</button>
     <div id="scores" class="muted">Chưa tải điểm...</div>
   </div>
 
   <script>
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxcwfm88NfUP2QAh5Rc29G6wiAgNK2McIb55zfMzE5E4AJb34E0bQ2IUYPc43iKRup0/exec";
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbziZMsPZeTGcbgSxsBAcecddw64Rqn9WvgYExNGzi6Rpbr6WCrAbY3U-N_WhoJQOMnO/exec";
 
     const nameInp = document.getElementById('name');
     const roundInp = document.getElementById('round');
@@ -89,7 +97,7 @@
     const statusLbl = document.getElementById('status');
     const scoresDiv = document.getElementById('scores');
 
-    // Lưu tên cục bộ
+    // lưu tên cục bộ
     if(localStorage.getItem('sam_name')){
       nameInp.value = localStorage.getItem('sam_name');
     }
@@ -97,58 +105,73 @@
       localStorage.setItem('sam_name', nameInp.value.trim());
     });
 
-    // GỬI DỮ LIỆU
+    // gửi dữ liệu
     document.getElementById('sendBtn').addEventListener('click', ()=>{
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value,10);
       const val = valInp.value.trim();
       if(!name || isNaN(round) || !val){
-        alert('Vui lòng nhập đầy đủ tên, ván và điểm.');
+        alert('⚠️ Vui lòng nhập đầy đủ Tên, Ván, và Điểm.');
         return;
       }
 
-      const row = round + 2; // Hàng 1=tiêu đề, hàng 2=SUM
+      const row = round + 2;
       statusLbl.textContent = '⏳ Đang gửi...';
+
       fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, row, value: val })
       })
-      .then(r => r.text())
-      .then(res => {
-        statusLbl.textContent = '✅ ' + res;
+      .then(res => res.text())
+      .then(txt => {
+        statusLbl.textContent = txt.includes('✅')
+          ? '✅ Gửi thành công cho ' + name
+          : '⚠️ ' + txt;
         valInp.value = '';
-        roundInp.value = round + 1;
         valInp.focus();
+        roundInp.value = round + 1;
       })
       .catch(err => {
-        statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
         console.error(err);
+        statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
       });
     });
 
-    // NÚT VÁN MỚI
+    // ván mới
     document.getElementById('nextRowBtn').addEventListener('click', ()=>{
       const cur = parseInt(roundInp.value,10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
 
-    // XEM ĐIỂM
+    // xem điểm của bản thân
     document.getElementById('loadScores').addEventListener('click', ()=>{
-      scoresDiv.textContent = '⏳ Đang tải...';
+      const selfName = nameInp.value.trim();
+      if(!selfName){
+        alert("⚠️ Hãy nhập tên trước khi xem điểm!");
+        return;
+      }
+      scoresDiv.textContent = '⏳ Đang tải điểm...';
+
       fetch(GOOGLE_SHEET_URL)
         .then(r => r.json())
         .then(data => {
-          let text = '';
-          for (const [k,v] of Object.entries(data)) {
-            text += `${k}: ${v}\n`;
+          if(data.error){
+            scoresDiv.textContent = "❌ " + data.error;
+            return;
           }
-          scoresDiv.textContent = text || 'Không có dữ liệu.';
+          const keys = Object.keys(data);
+          const match = keys.find(k => k.trim().toLowerCase() === selfName.trim().toLowerCase());
+          if(match){
+            scoresDiv.textContent = `📊 ${match}: ${data[match]}`;
+          } else {
+            scoresDiv.textContent = "⚠️ Không tìm thấy tên trong bảng điểm.";
+          }
         })
         .catch(err => {
-          scoresDiv.textContent = '❌ Lỗi tải dữ liệu';
           console.error(err);
+          scoresDiv.textContent = '❌ Lỗi tải dữ liệu';
         });
     });
   </script>
