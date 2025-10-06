@@ -10,8 +10,8 @@
       max-width: 420px;
       margin: 40px auto;
       padding: 20px;
-      background: #f8fafc;
-      color: #111;
+      background: #0f172a;
+      color: #f8fafc;
     }
     h1 {
       text-align: center;
@@ -19,9 +19,9 @@
       margin-bottom: 20px;
     }
     .card {
-      background: #fff;
+      background: #1e293b;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .06);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
       padding: 16px;
     }
     label {
@@ -33,9 +33,13 @@
       width: 100%;
       padding: 10px;
       margin-top: 4px;
-      border: 1px solid #d1d5db;
+      border: 1px solid #334155;
       border-radius: 8px;
       font-size: 15px;
+    }
+    input {
+      background: #0f172a;
+      color: #f8fafc;
     }
     button {
       background: #2563eb;
@@ -52,16 +56,22 @@
     }
     .muted {
       font-size: 13px;
-      color: #6b7280;
+      color: #94a3b8;
       margin-top: 6px;
     }
     #sumBox {
       margin-top: 10px;
-      padding: 8px 10px;
-      background: #eef2ff;
+      padding: 10px;
+      background: #1e40af;
       border-radius: 8px;
       font-weight: 600;
       text-align: center;
+      color: #f1f5f9;
+    }
+    #loadBtn {
+      background: #0ea5e9;
+      color: #fff;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -71,7 +81,11 @@
   <div class="card">
     <label>Bạn là:</label>
     <input type="text" id="name" placeholder="Nhập tên (có dấu, giống hàng 1)">
-    <div id="sumBox">Tổng hiện tại: —</div>
+
+    <div class="row">
+      <button id="loadBtn">🔄 Load điểm</button>
+    </div>
+    <div id="sumBox">Chưa tải tổng điểm.</div>
 
     <label>Ván số:</label>
     <input type="number" id="round" value="1" min="1">
@@ -96,17 +110,15 @@
     const statusLbl = document.getElementById('status');
     const sumBox = document.getElementById('sumBox');
 
-    // Lưu tên người chơi để lần sau tự điền
+    // Ghi nhớ tên
     if (localStorage.getItem('sheet_name')) {
       nameInp.value = localStorage.getItem('sheet_name');
-      fetchSum();
     }
     nameInp.addEventListener('change', () => {
       localStorage.setItem('sheet_name', nameInp.value.trim());
-      fetchSum();
     });
 
-    // Gửi dữ liệu (POST)
+    // Gửi dữ liệu
     document.getElementById('sendBtn').addEventListener('click', () => {
       const name = nameInp.value.trim();
       const round = parseInt(roundInp.value, 10);
@@ -117,7 +129,7 @@
         return;
       }
 
-      const row = round + 2; // Hàng 1 = tên, hàng 2 = tổng, dữ liệu bắt đầu từ hàng 3
+      const row = round + 2;
       statusLbl.textContent = '⏳ Đang gửi...';
 
       fetch(SCRIPT_URL, {
@@ -130,8 +142,7 @@
         statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
         valInp.value = '';
         valInp.focus();
-        roundInp.value = parseInt(roundInp.value) + 1; // Tự tăng ván
-        fetchSum(); // Cập nhật tổng điểm mới
+        roundInp.value = parseInt(roundInp.value) + 1;
       })
       .catch(err => {
         statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
@@ -146,10 +157,15 @@
       valInp.focus();
     });
 
-    // Gọi doGet() để lấy tổng điểm
+    // Nút Load điểm
+    document.getElementById('loadBtn').addEventListener('click', fetchSum);
+
     function fetchSum() {
       const name = nameInp.value.trim();
-      if (!name) return;
+      if (!name) {
+        sumBox.textContent = "⚠️ Vui lòng nhập tên trước khi load điểm.";
+        return;
+      }
 
       sumBox.textContent = "⏳ Đang tải tổng điểm...";
       fetch(SCRIPT_URL)
@@ -162,7 +178,7 @@
           if (data[name] !== undefined) {
             sumBox.textContent = "Tổng hiện tại: " + data[name];
           } else {
-            sumBox.textContent = "Không tìm thấy tên này trong sheet.";
+            sumBox.textContent = "⚠️ Không tìm thấy tên này trong sheet.";
           }
         })
         .catch(() => {
