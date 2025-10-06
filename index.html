@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Nhập kết quả theo ván (Sheet 1)</title>
+  <title>🂡 Sâm Lốc – Ghi & Xem điểm</title>
   <style>
     body {
       font-family: system-ui, Arial, sans-serif;
@@ -11,18 +11,19 @@
       margin: 40px auto;
       padding: 20px;
       background: #0f172a;
-      color: #f8fafc;
+      color: #f1f5f9;
     }
     h1 {
       text-align: center;
-      font-size: 20px;
+      font-size: 22px;
       margin-bottom: 20px;
     }
     .card {
       background: #1e293b;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
-      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.4);
+      padding: 18px;
+      margin-bottom: 16px;
     }
     label {
       display: block;
@@ -33,116 +34,92 @@
       width: 100%;
       padding: 10px;
       margin-top: 4px;
-      border: 1px solid #334155;
       border-radius: 8px;
       font-size: 15px;
-    }
-    input {
+      border: 1px solid #334155;
       background: #0f172a;
       color: #f8fafc;
     }
+    input::placeholder { color: #64748b; }
     button {
       background: #2563eb;
-      color: #fff;
-      border: 0;
-      margin-top: 12px;
+      color: white;
+      border: none;
       cursor: pointer;
+      font-weight: 600;
     }
     button:hover { opacity: 0.9; }
-    .row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .muted {
-      font-size: 13px;
-      color: #94a3b8;
-      margin-top: 6px;
-    }
-    #sumBox {
-      margin-top: 10px;
-      padding: 10px;
-      background: #1e40af;
-      border-radius: 8px;
-      font-weight: 600;
-      text-align: center;
-      color: #f1f5f9;
-    }
-    #loadBtn {
-      background: #0ea5e9;
-      color: #fff;
-      font-weight: 600;
-    }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .muted { font-size: 13px; color: #94a3b8; margin-top: 6px; }
+    #scores { background:#0f172a; border-radius:10px; padding:10px; font-size:14px; white-space:pre-line; margin-top:12px; }
+    #loadScores { background:#10b981; }
   </style>
 </head>
 <body>
-  <h1>📊 Ghi dữ liệu vào Google Sheet (Sheet 1)</h1>
+  <h1>🂡 Sâm Lốc – Ghi & Xem điểm</h1>
 
   <div class="card">
     <label>Bạn là:</label>
     <input type="text" id="name" placeholder="Nhập tên (có dấu, giống hàng 1)">
 
-    <div class="row">
-      <button id="loadBtn">🔄 Load điểm</button>
-    </div>
-    <div id="sumBox">Chưa tải tổng điểm.</div>
-
     <label>Ván số:</label>
     <input type="number" id="round" value="1" min="1">
 
-    <label>Giá trị nhập:</label>
-    <input type="text" id="value" placeholder="Nhập nội dung...">
+    <label>Điểm ghi:</label>
+    <input type="text" id="value" placeholder="Nhập điểm thắng/thua...">
 
     <div class="row">
       <button id="sendBtn">💾 Gửi dữ liệu</button>
-      <button id="nextRowBtn" style="background:#10b981">⏭ Ván mới (+1)</button>
+      <button id="nextRowBtn" style="background:#0ea5e9">⏭ Ván mới (+1)</button>
     </div>
-
     <div id="status" class="muted">Chưa gửi...</div>
   </div>
 
+  <div class="card" style="text-align:center">
+    <button id="loadScores">🔄 Xem điểm</button>
+    <div id="scores" class="muted">Chưa tải điểm...</div>
+  </div>
+
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwsCAPRPCMgauNG6nFJB7CnnhU15h12JSPfUeepqtsZE-agsUXfRRdjv6FAGwB_VykX/exec";
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxcwfm88NfUP2QAh5Rc29G6wiAgNK2McIb55zfMzE5E4AJb34E0bQ2IUYPc43iKRup0/exec";
 
     const nameInp = document.getElementById('name');
     const roundInp = document.getElementById('round');
     const valInp = document.getElementById('value');
     const statusLbl = document.getElementById('status');
-    const sumBox = document.getElementById('sumBox');
+    const scoresDiv = document.getElementById('scores');
 
-    // Ghi nhớ tên
-    if (localStorage.getItem('sheet_name')) {
-      nameInp.value = localStorage.getItem('sheet_name');
+    // Lưu tên cục bộ
+    if(localStorage.getItem('sam_name')){
+      nameInp.value = localStorage.getItem('sam_name');
     }
-    nameInp.addEventListener('change', () => {
-      localStorage.setItem('sheet_name', nameInp.value.trim());
+    nameInp.addEventListener('change', ()=>{
+      localStorage.setItem('sam_name', nameInp.value.trim());
     });
 
-    // Gửi dữ liệu
-    document.getElementById('sendBtn').addEventListener('click', () => {
+    // GỬI DỮ LIỆU
+    document.getElementById('sendBtn').addEventListener('click', ()=>{
       const name = nameInp.value.trim();
-      const round = parseInt(roundInp.value, 10);
+      const round = parseInt(roundInp.value,10);
       const val = valInp.value.trim();
-
-      if (!name || isNaN(round) || !val) {
-        alert('⚠️ Vui lòng nhập đầy đủ tên, ván và nội dung');
+      if(!name || isNaN(round) || !val){
+        alert('Vui lòng nhập đầy đủ tên, ván và điểm.');
         return;
       }
 
-      const row = round + 2;
+      const row = round + 2; // Hàng 1=tiêu đề, hàng 2=SUM
       statusLbl.textContent = '⏳ Đang gửi...';
-
-      fetch(SCRIPT_URL, {
+      fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, row, value: val })
       })
-      .then(() => {
-        statusLbl.textContent = '✅ Đã gửi! (Kiểm tra Google Sheet)';
+      .then(r => r.text())
+      .then(res => {
+        statusLbl.textContent = '✅ ' + res;
         valInp.value = '';
+        roundInp.value = round + 1;
         valInp.focus();
-        roundInp.value = parseInt(roundInp.value) + 1;
       })
       .catch(err => {
         statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
@@ -150,41 +127,30 @@
       });
     });
 
-    // Nút sang ván mới
-    document.getElementById('nextRowBtn').addEventListener('click', () => {
-      const cur = parseInt(roundInp.value, 10) || 0;
+    // NÚT VÁN MỚI
+    document.getElementById('nextRowBtn').addEventListener('click', ()=>{
+      const cur = parseInt(roundInp.value,10) || 0;
       roundInp.value = cur + 1;
       valInp.focus();
     });
 
-    // Nút Load điểm
-    document.getElementById('loadBtn').addEventListener('click', fetchSum);
-
-    function fetchSum() {
-      const name = nameInp.value.trim();
-      if (!name) {
-        sumBox.textContent = "⚠️ Vui lòng nhập tên trước khi load điểm.";
-        return;
-      }
-
-      sumBox.textContent = "⏳ Đang tải tổng điểm...";
-      fetch(SCRIPT_URL)
+    // XEM ĐIỂM
+    document.getElementById('loadScores').addEventListener('click', ()=>{
+      scoresDiv.textContent = '⏳ Đang tải...';
+      fetch(GOOGLE_SHEET_URL)
         .then(r => r.json())
         .then(data => {
-          if (data.error) {
-            sumBox.textContent = "❌ " + data.error;
-            return;
+          let text = '';
+          for (const [k,v] of Object.entries(data)) {
+            text += `${k}: ${v}\n`;
           }
-          if (data[name] !== undefined) {
-            sumBox.textContent = "Tổng hiện tại: " + data[name];
-          } else {
-            sumBox.textContent = "⚠️ Không tìm thấy tên này trong sheet.";
-          }
+          scoresDiv.textContent = text || 'Không có dữ liệu.';
         })
-        .catch(() => {
-          sumBox.textContent = "⚠️ Không lấy được tổng điểm.";
+        .catch(err => {
+          scoresDiv.textContent = '❌ Lỗi tải dữ liệu';
+          console.error(err);
         });
-    }
+    });
   </script>
 </body>
 </html>
