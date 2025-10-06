@@ -11,8 +11,8 @@
       max-width: 420px;
       margin: 40px auto;
       padding: 20px;
-      background: #0f172a;
-      color: #f8fafc;
+      background: #000; /* nền đen tuyệt đối */
+      color: #d1d5db;  /* chữ xám nhạt */
     }
     h1 {
       text-align: center;
@@ -22,38 +22,44 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      color: #e5e7eb;
     }
     .card {
-      background: #1e293b;
+      background: #111827; /* xám đậm */
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .6);
       padding: 16px;
     }
     label {
       display: block;
       margin-top: 10px;
       font-weight: 600;
+      color: #9ca3af;
     }
     input, button {
       width: 100%;
       padding: 10px;
       margin-top: 4px;
-      border: 1px solid #334155;
       border-radius: 8px;
       font-size: 15px;
+      border: 1px solid #374151;
     }
     input {
       background: #0f172a;
-      color: #f8fafc;
+      color: #f1f5f9;
     }
+    input::placeholder { color: #6b7280; }
     button {
-      background: #2563eb;
-      color: #fff;
-      border: 0;
-      margin-top: 12px;
+      background: #374151;  /* nút xám tối */
+      color: #f3f4f6;
+      border: none;
       cursor: pointer;
+      font-weight: 600;
+      transition: background .2s ease;
     }
-    button:hover { opacity: 0.9; }
+    button:hover {
+      background: #4b5563;
+    }
     .row {
       display: flex;
       gap: 8px;
@@ -61,22 +67,24 @@
     }
     .muted {
       font-size: 13px;
-      color: #94a3b8;
+      color: #6b7280;
       margin-top: 6px;
     }
     #sumBox {
       margin-top: 10px;
       padding: 10px;
-      background: #1e40af;
+      background: #1f2937;
       border-radius: 8px;
       font-weight: 600;
       text-align: center;
-      color: #f1f5f9;
+      color: #e2e8f0;
+      border: 1px solid #374151;
     }
     #loadBtn {
-      background: #0ea5e9;
-      color: #fff;
-      font-weight: 600;
+      background: #4b5563;
+    }
+    #nextRowBtn {
+      background: #4b5563;
     }
   </style>
 </head>
@@ -100,7 +108,7 @@
 
     <div class="row">
       <button id="sendBtn">💾 Gửi dữ liệu</button>
-      <button id="nextRowBtn" style="background:#10b981">⏭ Ván mới (+1)</button>
+      <button id="nextRowBtn">⏭ Ván mới (+1)</button>
     </div>
 
     <div id="status" class="muted">Chưa gửi...</div>
