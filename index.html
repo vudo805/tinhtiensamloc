@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nhập kết quả theo ván (ghi vào Sheet 1)</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;max-width:420px;margin:40px auto;padding:20px;background:#f8fafc;color:#111}
+    h1{text-align:center;font-size:20px;margin-bottom:20px}
+    .card{background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.06);padding:16px}
+    label{display:block;margin-top:10px;font-weight:600}
+    input,button{width:100%;padding:10px;margin-top:4px;border:1px solid #d1d5db;border-radius:8px;font-size:15px}
+    button{background:#2563eb;color:#fff;border:0;margin-top:12px;cursor:pointer}
+    button:hover{opacity:0.9}
+    .row{display:flex;gap:8px;align-items:center}
+    .muted{font-size:13px;color:#6b7280;margin-top:6px}
+  </style>
+</head>
+<body>
+  <h1>📊 Ghi dữ liệu vào Google Sheet (Sheet 1)</h1>
+  <div class="card">
+    <label>Bạn là:</label>
+    <input type="text" id="name" placeholder="Nhập tên (có dấu, giống hàng 1)">
+
+    <label>Ván số:</label>
+    <input type="number" id="round" value="1" min="1">
+
+    <label>Giá trị nhập:</label>
+    <input type="text" id="value" placeholder="Nhập nội dung...">
+
+    <div class="row">
+      <button id="sendBtn">💾 Gửi dữ liệu</button>
+      <button id="nextRowBtn" style="background:#10b981">⏭ Ván mới (+1)</button>
+    </div>
+    <div id="status" class="muted">Chưa gửi...</div>
+  </div>
+
+  <script>
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx9C2KzzsqFS5KQHL_5_51h2aZThTIs8eVtYSAL3PjHewEGQ8Ut7F_9H6oDjg8Wfng_/exec";
+
+    const nameInp = document.getElementById('name');
+    const roundInp = document.getElementById('round');
+    const valInp = document.getElementById('value');
+    const statusLbl = document.getElementById('status');
+
+    // nhớ tên
+    if(localStorage.getItem('sheet_name')){
+      nameInp.value = localStorage.getItem('sheet_name');
+    }
+    nameInp.addEventListener('change', ()=>{
+      localStorage.setItem('sheet_name', nameInp.value.trim());
+    });
+
+    document.getElementById('sendBtn').addEventListener('click', ()=>{
+      const name = nameInp.value.trim();
+      const round = parseInt(roundInp.value,10);
+      const val = valInp.value.trim();
+      if(!name || isNaN(round) || !val){
+        alert('Vui lòng nhập đầy đủ tên, ván và nội dung');
+        return;
+      }
+
+      // tính dòng: ván + 2 vì hàng 1 = tên, hàng 2 = SUM
+      const row = round + 2;
+
+      statusLbl.textContent = '⏳ Đang gửi...';
+      fetch(GOOGLE_SHEET_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, row, value: val })
+      })
+      .then(r => r.text())
+      .then(res => {
+        statusLbl.textContent = '✅ ' + res;
+        valInp.value = '';
+        valInp.focus();
+      })
+      .catch(err => {
+        statusLbl.textContent = '❌ Lỗi gửi dữ liệu';
+        console.error(err);
+      });
+    });
+
+    document.getElementById('nextRowBtn').addEventListener('click', ()=>{
+      const cur = parseInt(roundInp.value,10) || 0;
+      roundInp.value = cur + 1;
+      valInp.focus();
+    });
+  </script>
+</body>
+</html>
